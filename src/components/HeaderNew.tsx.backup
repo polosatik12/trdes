@@ -1,0 +1,223 @@
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBars, faXmark, faChevronDown, faUser, faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
+import { useAuth } from '@/contexts/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger } from
+'@/components/ui/dropdown-menu';
+import logoHeader from '@/assets/logo-header.svg';
+
+interface HeaderNewProps {
+  hideLogo?: boolean;
+}
+
+const HeaderNew: React.FC<HeaderNewProps> = ({ hideLogo = false }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user, profile, signOut, loading } = useAuth();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAboutVisible, setIsAboutVisible] = useState(false);
+
+  const isActive = (path: string) => location.pathname === path;
+  const isHomePage = location.pathname === '/';
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!isHomePage) {
+      setIsAboutVisible(false);
+      return;
+    }
+    const el = document.getElementById('about-section');
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsAboutVisible(entry.isIntersecting),
+      { threshold: 0.2 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isHomePage]);
+
+  useEffect(() => {
+    if (isHomePage && location.hash === '#about-section') {
+      const timer = setTimeout(() => {
+        const el = document.getElementById('about-section');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isHomePage, location.hash]);
+
+  const getInitials = () => {
+    if (profile?.first_name && profile?.last_name) {
+      return `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
+    }
+    if (user?.email) {
+      return user.email[0].toUpperCase();
+    }
+    return 'U';
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  return (
+    <header className={`tdr-header ${isScrolled ? 'shadow-lg' : ''}`}>
+      <div className="tdr-header-main tdr-header-main--full">
+        {/* Mobile burger - left */}
+        <div className="md:hidden flex-1">
+          <button
+            className="p-3 text-primary min-w-[44px] min-h-[44px] flex items-center justify-center"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            <FontAwesomeIcon icon={isMobileMenuOpen ? faXmark : faBars} className="w-[22px] h-[22px]" />
+          </button>
+        </div>
+
+        {/* Logo - center on mobile, left on desktop */}
+        <div className="flex items-center justify-center md:flex-1 md:justify-start">
+          <Link to="/" className={`flex items-center shrink-0 ${hideLogo ? 'md:hidden' : ''}`}>
+            <img src={logoHeader} alt="Tour de Russie" className="h-[36px] w-auto" loading="eager" decoding="async" />
+          </Link>
+        </div>
+
+        {/* Center zone: Navigation */}
+        <div className="hidden md:flex items-center justify-center">
+          <div className="tdr-header-grid">
+            <Link to="/corporate" className={`tdr-nav-link tdr-nav-link--secondary tdr-grid-top-2 ${isActive('/corporate') ? 'active' : ''}`}>Корпоративная лига</Link>
+            <Link to="/reglament" className={`tdr-nav-link tdr-nav-link--secondary tdr-grid-top-4 ${isActive('/reglament') ? 'active' : ''}`}>Регламент</Link>
+            <Link to="/partners" className={`tdr-nav-link tdr-nav-link--secondary tdr-grid-top-6 ${isActive('/partners') ? 'active' : ''}`}>Партнеры</Link>
+            <Link to="/contact" className={`tdr-nav-link tdr-nav-link--secondary tdr-grid-top-8 ${isActive('/contact') ? 'active' : ''}`}>Контакты</Link>
+
+            {isHomePage ?
+            <a
+              href="#about-section"
+              className={`tdr-nav-link tdr-grid-bot-1 font-mono ${isAboutVisible ? 'active' : ''}`}
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('about-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}>
+                О проекте
+              </a> :
+            <Link to="/#about-section" className={`tdr-nav-link tdr-grid-bot-1 font-mono ${isAboutVisible ? 'active' : ''}`}>О проекте</Link>
+            }
+            <Link to="/calendar" className={`tdr-nav-link tdr-grid-bot-3 font-mono ${isActive('/calendar') ? 'active' : ''}`}>Календарь</Link>
+            <Link to="/results" className={`tdr-nav-link tdr-grid-bot-5 font-mono ${isActive('/results') ? 'active' : ''}`}>Результаты</Link>
+            <a href="#media" className="tdr-nav-link tdr-grid-bot-7 flex items-center gap-1 font-mono">
+              Медиа <FontAwesomeIcon icon={faChevronDown} className="w-[12px] h-[12px] opacity-60" />
+            </a>
+            
+            <a href="#chucha" className="tdr-nav-link tdr-grid-bot-9 font-mono">Мир чучи</a>
+          </div>
+        </div>
+        
+        {/* Auth */}
+        <div className="flex items-center gap-3 flex-1 justify-end">
+          {!loading && (
+          user ?
+          <>
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger className="hidden md:flex items-center gap-2 cursor-pointer outline-none">
+                    <Avatar className="h-8 w-8 border-2 border-white/20">
+                      <AvatarImage src={profile?.avatar_url || undefined} />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+                        {getInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 bg-white z-[1001] shadow-lg border">
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard" className="flex items-center gap-2 cursor-pointer">
+                        <FontAwesomeIcon icon={faUser} className="h-4 w-4" />
+                        Личный кабинет
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                  onClick={handleSignOut}
+                  className="flex items-center gap-2 cursor-pointer text-destructive">
+                      <FontAwesomeIcon icon={faRightFromBracket} className="h-4 w-4" />
+                      Выйти
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Link to="/dashboard" className="md:hidden flex items-center">
+                  <Avatar className="h-8 w-8 border-2 border-primary/20">
+                    <AvatarImage src={profile?.avatar_url || undefined} />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+                      {getInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
+              </> :
+          <>
+                <Link
+              to="/auth"
+              className="hidden md:inline-flex items-center justify-center text-xs font-bold uppercase tracking-widest px-5 py-2 rounded-sm transition-all hover:scale-105 bg-primary text-primary-foreground">
+                  Вход
+                </Link>
+                <Link to="/auth" className="md:hidden flex items-center text-primary">
+                  <FontAwesomeIcon icon={faUser} className="w-[22px] h-[22px]" />
+                </Link>
+              </>)
+          }
+        </div>
+      </div>
+      
+      {/* Mobile Menu */}
+      {isMobileMenuOpen &&
+      <div className="md:hidden bg-primary border-t border-white/10 py-5 px-6 overflow-y-auto max-h-[calc(100vh-88px)]">
+          <nav className="flex flex-col gap-1">
+            <a
+            href="#about-section"
+            className="text-white font-bold text-sm uppercase tracking-wider py-3 min-h-[44px] flex items-center"
+            onClick={(e) => {
+              e.preventDefault();
+              setIsMobileMenuOpen(false);
+              document.getElementById('about-section')?.scrollIntoView({ behavior: 'smooth' });
+            }}>
+              О проекте
+            </a>
+            <Link to="/calendar" className="text-white font-bold text-sm uppercase tracking-wider py-3 min-h-[44px] flex items-center">Календарь</Link>
+            <Link to="/results" className="text-white font-bold text-sm uppercase tracking-wider py-3 min-h-[44px] flex items-center" onClick={() => setIsMobileMenuOpen(false)}>Результаты</Link>
+            <a href="#media" className="text-white font-bold text-sm uppercase tracking-wider py-3 min-h-[44px] flex items-center">Медиа</a>
+            <a href="#chucha" className="text-white font-bold text-sm uppercase tracking-wider py-3 min-h-[44px] flex items-center">Мир чучи</a>
+            
+            <div className="border-t border-white/10 mt-3 pt-3 flex flex-col gap-1">
+              <Link to="/corporate" className="text-white/80 font-medium text-sm py-3 min-h-[44px] flex items-center">Корпоративная лига</Link>
+              <Link to="/reglament" className="text-white/80 font-medium text-sm py-3 min-h-[44px] flex items-center">Регламент</Link>
+              <Link to="/partners" className="text-white/80 font-medium text-sm py-3 min-h-[44px] flex items-center">Партнеры</Link>
+              <Link to="/contact" className="text-white/80 font-medium text-sm py-3 min-h-[44px] flex items-center">Контакты</Link>
+            </div>
+
+            {!user && !loading &&
+          <div className="border-t border-white/10 mt-3 pt-5 flex justify-center">
+                <Link
+              to="/auth"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="inline-flex items-center justify-center text-xs font-bold uppercase tracking-widest px-10 py-3 rounded-sm bg-white text-primary">
+                  Вход
+                </Link>
+              </div>
+          }
+          </nav>
+        </div>
+      }
+    </header>);
+};
+
+export default HeaderNew;

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - Tour de Russie</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 10px 5px; }
+        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .success { color: green; }
+        .error { color: red; }
+        h1 { color: #003051; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Tour de Russie API Test</h1>
+    
+    <h2>Тест 1: Отправка кода верификации</h2>
+    <button onclick="testSendCode()">Отправить код на test@example.com</button>
+    <pre id="result1">Нажмите кнопку для теста...</pre>
+    
+    <h2>Тест 2: Получить список событий</h2>
+    <button onclick="testGetEvents()">Получить события</button>
+    <pre id="result2">Нажмите кнопку для теста...</pre>
+    
+    <h2>Тест 3: Проверить конфигурацию</h2>
+    <button onclick="checkConfig()">Проверить</button>
+    <pre id="result3">Нажмите кнопку для теста...</pre>
+    
+    <script>
+    const API_URL = 'https://tourderussie.ru/api';
+    
+    async function testSendCode() {
+        const resultEl = document.getElementById('result1');
+        resultEl.textContent = '⏳ Отправка запроса...';
+        
+        try {
+            const response = await fetch(`${API_URL}/auth/send-verification-code`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: 'test@example.com' })
+            });
+            
+            const data = await response.json();
+            resultEl.className = 'success';
+            resultEl.textContent = `✅ Успех!\n\nStatus: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`;
+        } catch (error) {
+            resultEl.className = 'error';
+            resultEl.textContent = `❌ Ошибка!\n\n${error.message}\n\nПроверьте консоль браузера (F12) для деталей.`;
+        }
+    }
+    
+    async function testGetEvents() {
+        const resultEl = document.getElementById('result2');
+        resultEl.textContent = '⏳ Загрузка событий...';
+        
+        try {
+            const response = await fetch(`${API_URL}/events`);
+            const data = await response.json();
+            resultEl.className = 'success';
+            resultEl.textContent = `✅ Успех!\n\nНайдено событий: ${data.events?.length || 0}\n\n${JSON.stringify(data, null, 2)}`;
+        } catch (error) {
+            resultEl.className = 'error';
+            resultEl.textContent = `❌ Ошибка!\n\n${error.message}`;
+        }
+    }
+    
+    function checkConfig() {
+        const resultEl = document.getElementById('result3');
+        resultEl.textContent = `Текущая конфигурация:\n\nAPI URL: ${API_URL}\nТекущий домен: ${window.location.origin}\nUser Agent: ${navigator.userAgent}`;
+    }
+    </script>
+</body>
+</html>
