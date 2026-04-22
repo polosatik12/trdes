@@ -33,6 +33,8 @@ const Insurance = lazyRetry(() => import("./pages/Dashboard/Insurance"));
 const Payments = lazyRetry(() => import("./pages/Dashboard/Payments"));
 const Cart = lazyRetry(() => import("./pages/Dashboard/Cart"));
 const CorporateMembers = lazyRetry(() => import("./pages/Dashboard/CorporateMembers"));
+const CorporateProfile = lazyRetry(() => import("./pages/Dashboard/CorporateProfile"));
+const CorporateRegistration = lazyRetry(() => import("./pages/Dashboard/CorporateRegistration"));
 const NotFound = lazyRetry(() => import("./pages/NotFound"));
 const Suzdal = lazyRetry(() => import("./pages/Events/Suzdal"));
 const Igora = lazyRetry(() => import("./pages/Events/Igora"));
@@ -106,12 +108,13 @@ const App = () => (
             <Route path="/dashboard/participations" element={<ProtectedRoute><Participations /></ProtectedRoute>} />
             <Route path="/dashboard/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
             <Route path="/dashboard/health" element={<ProtectedRoute><HealthCertificate /></ProtectedRoute>} />
-            <Route path="/dashboard/insurance" element={<ProtectedRoute><Insurance /></ProtectedRoute>} />
             <Route path="/dashboard/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
             <Route path="/dashboard/payments/success" element={<ProtectedRoute><Payments status="success" /></ProtectedRoute>} />
             <Route path="/dashboard/payments/failed" element={<ProtectedRoute><Payments status="failed" /></ProtectedRoute>} />
             <Route path="/dashboard/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
             <Route path="/dashboard/members" element={<ProtectedRoute><CorporateMembers /></ProtectedRoute>} />
+            <Route path="/dashboard/corporate-profile" element={<ProtectedRoute><CorporateProfile /></ProtectedRoute>} />
+            <Route path="/dashboard/corporate-registration" element={<ProtectedRoute><CorporateRegistration /></ProtectedRoute>} />
 
             {/* CRM Admin */}
             <Route path="/crm/*" element={<CRM />} />

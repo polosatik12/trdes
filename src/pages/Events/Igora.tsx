@@ -6,35 +6,52 @@ import HeaderNew from '../../components/HeaderNew';
 import FooterNew from '../../components/FooterNew';
 
 const sliderImages = ['/images/igora-hero.jpg', '/images/igora-slider-1.jpg', '/images/igora-slider-2.jpg', '/images/igora-slider-3.jpg'];
-const galleryImages = ['/images/igora-new-1.jpg', '/images/igora-new-2.jpg', '/images/igora-new-3.jpg'];
+const galleryImages = [
+  '/images/igora-photo-1.jpg',
+  '/images/igora-photo-2.jpg',
+  '/images/igora-photo-3.jpg',
+  '/images/igora-photo-4.jpg',
+  '/images/igora-photo-5.jpg',
+  '/images/igora-photo-6.jpg',
+  '/images/igora-photo-7.jpg',
+];
 
 const hotels = [
 {
-  name: 'Отель Игора',
+  name: 'Отель «Игора»',
   address: 'Ленинградская область, Приозерский р-н, пл. 69-й км, ул. Всесезонная, д. 1',
-  description: 'Отель на территории курорта «Игора». Номера в скандинавском стиле, завтраки «шведский стол», бесплатный Wi-Fi.',
-  details: 'Отель предлагает 42 номера категории Стандарт и 5 номеров Люкс. Номера выполнены в скандинавском стиле с деревянной мебелью и современной техникой. Завтраки в формате «шведский стол» с 8:00 до 12:00. Бесплатный шаттл между объектами курорта каждые 40 минут. Идеальное расположение для участников велозаезда.',
-  amenities: ['Wi-Fi', 'Завтрак', 'Шаттл', 'Кондиционер', 'Сейф'],
+  description: 'В отеле представлены номера категорий «Стандарт» и «Люкс» в классическом стиле. Расположен в непосредственной близости от основных активностей курорта.',
+  details: 'В отеле представлены номера категорий «Стандарт» и «Люкс» в классическом стиле. Расположен в непосредственной близости от основных активностей курорта.',
+  amenities: ['Wi-Fi', 'Завтрак', 'Шаттл', 'Кондиционер'],
   bookingUrl: 'https://igora.ru/live/hotel/',
-  image: '/images/igora-hotel.jpg'
+  image: '/images/igora-hotel-1.jpg'
 },
 {
-  name: 'Коттедж Игора',
-  address: 'Ленинградская область, Приозерский р-н, пл. 69-й км, курорт «Игора»',
-  description: 'Просторные коттеджи на 4-6 человек в хвойном лесу. Сауна, камин, терраса, современная кухня с премиальной техникой.',
-  details: 'Коттеджи с 2-3 спальнями расположены в хвойном лесу на территории курорта. Гостиная с камином и ТВ, современная кухня, сауна, терраса с плетеной мебелью. Отдельные ванные комнаты в каждой спальне. Собственный въезд, парковка, мангал во дворе. Завтраки-буфет с 8:00 до 12:00. Бесплатный шаттл между объектами курорта каждые 40 минут.',
-  amenities: ['Сауна', 'Камин', 'Кухня', 'Терраса', 'Парковка', 'Завтрак'],
+  name: 'Отель «Игора. Времена года»',
+  address: 'Ленинградская область, Приозерский р-н, курорт «Игора»',
+  description: 'Стильные номера с лаконичным дизайном и собственной террасой в окружении хвойного леса.',
+  details: 'Стильные номера с лаконичным дизайном и собственной террасой в окружении хвойного леса.',
+  amenities: ['Wi-Fi', 'Терраса', 'Лес', 'Дизайн'],
+  bookingUrl: 'https://igora.ru/live/hotel/',
+  image: '/images/igora-hotel-2.jpg'
+},
+{
+  name: 'Апарт-отель',
+  address: 'Ленинградская область, Приозерский р-н, курорт «Игора»',
+  description: 'Уютный апарт-отель вблизи озера с зоной кухни и гостиной – отличный вариант для семейного отдыха.',
+  details: 'Уютный апарт-отель вблизи озера с зоной кухни и гостиной – отличный вариант для семейного отдыха.',
+  amenities: ['Wi-Fi', 'Кухня', 'Озеро', 'Семейный'],
+  bookingUrl: 'https://igora.ru/live/',
+  image: '/images/igora-hotel-3.jpg'
+},
+{
+  name: 'Коттеджи',
+  address: 'Ленинградская область, Приозерский р-н, курорт «Игора»',
+  description: 'Просторные коттеджи с двумя или тремя спальнями расположены в хвойном лесу.',
+  details: 'Просторные коттеджи с двумя или тремя спальнями расположены в хвойном лесу.',
+  amenities: ['Сауна', 'Камин', 'Кухня', 'Парковка'],
   bookingUrl: 'https://igora.ru/live/cottage/',
-  image: '/images/igora-cottage.jpg'
-},
-{
-  name: 'Отель Парк Крестовский',
-  address: 'Санкт-Петербург, Северная дорога, д. 12 Б',
-  description: 'Современный отель на Крестовском острове с 227 номерами. SPA-центр, 3 ресторана, велотрек и теннисные корты.',
-  details: 'Пятиэтажная гостиница включает 227 номеров разных категорий, конференц-залы, три концептуальных ресторана и летнюю террасу в уютном внутреннем дворе. SPA-центр, консьерж-сервис, трансфер, велотрек и теннисные корты на территории. Идеальное расположение для участников велозаезда с собственной велоинфраструктурой.',
-  amenities: ['Wi-Fi', 'SPA', '3 ресторана', 'Велотрек', 'Трансфер', 'Терраса'],
-  bookingUrl: 'https://otelpark.ru/rooms1/',
-  image: '/images/park-krestovsky-hotel.jpg'
+  image: '/images/igora-hotel-4.jpg'
 }];
 
 const routes = [
@@ -42,10 +59,11 @@ const routes = [
 { name: 'Median Tour', distance: '60 км', elevation: '~850 м', desc: 'Средняя дистанция потребует еще больше сил и опыта от участников Tour de Russie. MEDIAN Tour составляет 2 круга по 30 километров каждый с набором высоты 850 метров, за всю дистанцию. После первых 30-ти километров, на ключевом перекрестке следует повернуть на лево, по указателю 60/86 км. После прохождения второго круга, в этом месте, необходимо двигаться прямо в сторону финиша. Финальные километры дистанции местами имеют градиент до 10 %.', mapType: 'wikiloc' as const, wikilocId: '258180702' },
 { name: 'Grand Tour', distance: '86 км', elevation: '~1200 м', desc: 'Полная дистанция GRAND Tour в «Игоре» имеет протяженность 86 километров с набором высоты 1200 метров, рассчитана на хорошо подготовленных спортсменов. Это максимальный набор из всех заездов сезона. После прохождения трех кругов на перекрестке с отметкой компьютера 83 километров от старта, следует двигаемся прямо в сторону финиша. На дистанции 86 км присутствует лимит времени.', warning: 'После двух кругов, участников, которые не впишутся по времени, контролеры будут направлять в сторону финиша. Место и результат в итоговом протоколе будет присуждаться с пометкой минус 1 круг.', mapType: 'wikiloc' as const, wikilocId: '258179651' }];
 
-const borderColors = ['#fec800', '#62b22f', '#e61c56'];
+const borderColors = ['#62b22f', '#fec800', '#e61c56'];
 
 const Igora: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [currentGallerySlide, setCurrentGallerySlide] = useState(0);
   const [activeRoute, setActiveRoute] = useState(0);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [expandedHotel, setExpandedHotel] = useState<string | null>(null);
@@ -58,6 +76,9 @@ const Igora: React.FC = () => {
   const maxSlide = Math.max(0, sliderImages.length - itemsPerView);
   const nextSlide = () => setCurrentSlide((prev) => Math.min(prev + 1, maxSlide));
   const prevSlide = () => setCurrentSlide((prev) => Math.max(prev - 1, 0));
+  const maxGallerySlide = Math.max(0, galleryImages.length - itemsPerView);
+  const nextGallerySlide = () => setCurrentGallerySlide((prev) => Math.min(prev + 1, maxGallerySlide));
+  const prevGallerySlide = () => setCurrentGallerySlide((prev) => Math.max(prev - 1, 0));
 
   const sliderTouchX = useRef(0);
   const handleSliderTouchStart = (e: React.TouchEvent) => {sliderTouchX.current = e.touches[0].clientX;};
@@ -243,25 +264,47 @@ const Igora: React.FC = () => {
       <section className="py-16 md:py-20 bg-muted">
         <div className="max-w-[1200px] mx-auto px-6 md:px-10">
           <h2 className="font-extrabold text-2xl md:text-3xl text-primary uppercase mb-6 font-mono text-center">
-            Об Игоре
+            О Всесезонном курорте «Игора»
           </h2>
           <div className="space-y-4 text-foreground text-base md:text-lg leading-relaxed mb-10">
             <p>
-              Курорт «Игора» расположен в Ленинградской области на Карельском перешейке, между Сосново и Орехово, в 50 километрах от Санкт-Петербурга. Это северный ландшафт с холмами ледникового происхождения, сосновыми лесами и озёрами. Рельеф мягко меняется, формируя динамичную, но гармоничную топографию.
+              Курорт «Игора» расположен в 50 км от Санкт-Петербурга, в Ленинградской области. Он органично вписан в природный ландшафт, развитая инфраструктура открывает фантастические возможности для спорта, развлечений и отдыха в любое время года. Зимой здесь работают 10 горнолыжных склонов с трассами разного уровня сложности. Летом гостей ждет оборудованный пляж с шезлонгами, детский и взрослый бассейн с подогревом и масса развлечений на любой вкус: площадки для пляжного волейбола, футбола и большого тенниса, сап-борды и мини гольф. Круглый год на курорте открыт Ледовый дворец, где тренируются олимпийские чемпионы, работает школа хоккея и фигурного катания, керлинг и боулинг, а также есть возможность пролететь на одном из самых длинных троллеев на Северо-Западе.
             </p>
             <p>
-              Курорт находится у Приозерского шоссе, которое постепенно выводит из городской среды в природную. Через несколько километров появляются длинные линии леса и открытые участки перешейка. Район исторически развивался как дачная зона Петербурга, и ощущение курортного пространства здесь сохраняется.
+              Гастрономическая карта курорта идеально дополняет все активности: рестораны и кафе с европейской, средиземноморской и авторской кухней с акцентом на локальные продукты региона. Для проживания гости могут выбрать один из форматов размещений: отель, апарт-отель рядом с озером, коттеджи с камином и сауной или отель «Игора. Времена года».
             </p>
             <p>
-              Игора — современный центр активного отдыха с круглогодичной инфраструктурой. Простор, северный свет и естественный рельеф создают узнаваемый характер места.
+              После масштабной реновации на курорте открылся СПА-комплекс с панорамным бассейном — пространство нового формата, созданное для глубокого восстановления и внутреннего баланса. В СПА-пространстве можно попробовать индивидуальные программы восстановления, аутентичные ритуалы, а также забронировать приватные сьюты с хаммамом, контрастными купелями и баней.
             </p>
           </div>
-          <div className="flex md:grid md:grid-cols-3 gap-4 overflow-x-auto snap-x snap-mandatory -mx-6 px-6 md:mx-0 md:px-0 md:overflow-visible pb-2">
-            {galleryImages.map((img, idx) =>
-            <div key={idx} className="aspect-[4/3] overflow-hidden cursor-zoom-in min-w-[80vw] md:min-w-0 snap-start" onClick={() => setSelectedImage(img)}>
-                <img src={img} alt={`Игора фото ${idx + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" loading="lazy" decoding="async" />
+          <div className="relative">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {galleryImages.slice(currentGallerySlide, currentGallerySlide + itemsPerView).map((img, idx) =>
+                <div key={currentGallerySlide + idx} className="aspect-[4/3] overflow-hidden cursor-zoom-in" onClick={() => setSelectedImage(img)}>
+                  <img src={img} alt={`Игора фото ${currentGallerySlide + idx + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" loading="lazy" decoding="async" />
+                </div>
+              )}
+            </div>
+            <button onClick={prevGallerySlide} disabled={currentGallerySlide === 0} className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-10 h-10 bg-white shadow-md items-center justify-center hover:bg-muted transition-colors hidden md:flex disabled:opacity-30">
+              <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 20 }} />
+            </button>
+            <button onClick={nextGallerySlide} disabled={currentGallerySlide >= maxGallerySlide} className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-10 h-10 bg-white shadow-md items-center justify-center hover:bg-muted transition-colors hidden md:flex disabled:opacity-30">
+              <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 20 }} />
+            </button>
+            <div className="flex justify-center items-center gap-2 mt-4">
+              <button onClick={prevGallerySlide} disabled={currentGallerySlide === 0} className="md:hidden w-7 h-7 flex items-center justify-center rounded-full bg-foreground/10 disabled:opacity-30">
+                <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 16 }} />
+              </button>
+              <div className="flex gap-1.5">
+                {Array.from({ length: maxGallerySlide + 1 }).map((_, idx) =>
+                  <button key={idx} onClick={() => setCurrentGallerySlide(idx)} className="rounded-full transition-all duration-300"
+                    style={{ width: idx === currentGallerySlide ? 18 : 8, height: 8, background: idx === currentGallerySlide ? 'hsl(var(--primary))' : 'hsl(var(--foreground) / 0.2)' }} />
+                )}
               </div>
-            )}
+              <button onClick={nextGallerySlide} disabled={currentGallerySlide >= maxGallerySlide} className="md:hidden w-7 h-7 flex items-center justify-center rounded-full bg-foreground/10 disabled:opacity-30">
+                <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 16 }} />
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -270,7 +313,7 @@ const Igora: React.FC = () => {
       <section className="py-16 md:py-20 bg-background">
         <div className="max-w-[1200px] mx-auto px-6 md:px-10">
           <h2 className="font-extrabold text-2xl md:text-3xl text-primary uppercase mb-10 text-center font-mono">
-            Отели рядом с Игорой
+            Отели курорта «Игора»
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {hotels.map((hotel) => {

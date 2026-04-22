@@ -15,8 +15,6 @@ const CRMLogin: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 
     try {
       const { data } = await authAPI.login(email, password);
-      localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
       onSuccess();
     } catch (error) {
       toast.error('Неверный email или пароль');

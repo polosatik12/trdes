@@ -2,7 +2,7 @@ import axios, { AxiosError } from 'axios';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
-  withCredentials: false,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -10,10 +10,6 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
     return config;
   },
   (error) => {
@@ -52,6 +48,9 @@ export const authAPI = {
   logout: () => api.post('/auth/logout'),
 
   getCurrentUser: () => api.get('/auth/me'),
+
+  changeEmail: (new_email: string, password: string) =>
+    api.post('/auth/change-email', { new_email, password }),
 
   refreshToken: (token: string) =>
     api.post('/auth/refresh', { token }),
@@ -102,6 +101,9 @@ export const registrationsAPI = {
 
   updateRegistration: (id: string, data: any) =>
     api.put(`/registrations/${id}`, data),
+
+  createCorporateGroup: (data: { event_id: string; members: { member_id: string; distance_id: string }[] }) =>
+    api.post('/registrations/corporate-group', data),
 };
 
 export const healthCertificatesAPI = {

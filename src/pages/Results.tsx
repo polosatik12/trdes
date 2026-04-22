@@ -17,6 +17,13 @@ function getDisplayDistanceName(backendName: string): string {
   return mapping[backendName] || backendName;
 }
 
+function getDistanceColor(distanceId: string): string {
+  if (distanceId === 'grand') return '#e61c56';
+  if (distanceId === 'median') return '#fec800';
+  if (distanceId === 'intro') return '#62b22f';
+  return '#003051';
+}
+
 function getAgeCategory(dateOfBirth: string | null, gender: string | null): string {
   if (!dateOfBirth || !gender) return 'А 18+';
   const today = new Date();
@@ -274,24 +281,6 @@ const Results: React.FC = () => {
                 ← Вернуться к выбору города
               </button>
 
-              {/* Distance tabs */}
-              {displayDistances && displayDistances.length > 0 && (
-                <div className="flex flex-wrap gap-2 justify-center mb-6">
-                  {displayDistances.map((d: any) => (
-                    <button
-                      key={d.id}
-                      onClick={() => { setSelectedDistanceId(d.id); setPage(1); }}
-                      className={`px-5 py-2.5 text-sm font-bold uppercase tracking-wide transition-colors ${
-                        activeDistanceId === d.id
-                          ? 'bg-[#E31E24] text-white'
-                          : 'bg-transparent text-foreground hover:text-[#E31E24] border-b-2 border-transparent hover:border-[#E31E24]'
-                      }`}
-                    >
-                      {getDisplayDistanceName(d.name)}
-                    </button>
-                  ))}
-                </div>
-              )}
 
               {/* Title */}
               {selectedCity && (
@@ -299,6 +288,29 @@ const Results: React.FC = () => {
                   <span className="font-extrabold uppercase">{distanceDisplayName}</span>
                   <span className="font-light">, {selectedCity.titleLocation}, {selectedCity.date} г.</span>
                 </h1>
+              )}
+
+              {/* Distance tabs */}
+              {displayDistances.length > 1 && (
+                <div className="flex flex-wrap gap-2 justify-center mb-6">
+                  {displayDistances.map((d) => {
+                    const color = getDistanceColor(d.id);
+                    const isActive = activeDistanceId === d.id;
+                    return (
+                      <button
+                        key={d.id}
+                        onClick={() => { setSelectedDistanceId(d.id); setPage(1); }}
+                        style={isActive
+                          ? { backgroundColor: color, borderColor: color, color: '#fff' }
+                          : { backgroundColor: 'transparent', borderColor: color, color: color }
+                        }
+                        className="px-5 py-2 text-sm font-bold uppercase tracking-wide transition-colors border"
+                      >
+                        {getDisplayDistanceName(d.name)}
+                      </button>
+                    );
+                  })}
+                </div>
               )}
 
               {/* Category tabs */}

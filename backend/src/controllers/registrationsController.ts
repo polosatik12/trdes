@@ -17,6 +17,7 @@ export const getUserRegistrations = async (req: AuthRequest, res: Response) => {
       e.name as event_name,
       e.date as event_date,
       e.location as event_location,
+      e.status as event_status,
       d.name as distance_name,
       d.distance_km
     FROM event_registrations r
@@ -126,4 +127,63 @@ export const updateRegistration = async (req: AuthRequest, res: Response) => {
   }
 
   res.json({ registration: result.rows[0] });
+};
+
+const corporateGroupSchema = z.object({
+  event_id: z.string().uuid(),
+  members: z.array(z.object({
+    member_id: z.string().uuid(),
+    distance_id: z.string().uuid(),
+  })).min(1),
+});
+
+export const createCorporateGroupRegistration = async (req: AuthRequest, res: Response) => {
+  const { event_id, members } = corporateGroupSchema.parse(req.body);
+  const userId = req.userId!;
+
+  const accountResult = await query('SELECT id FROM corporate_accounts WHERE user_id = $1', [userId]);
+  if (accountResult.rows.length === 0) throw new AppError('Корпоративный аккаунт не найден', 404);
+  const accountId = accountResult.rows[0].id;
+
+  const memberIds = members.map((m: any) => m.member_id);
+  const membersCheck = await query(
+    'SELECT id FROM corporate_members WHERE id = ANY($1) AND corporate_account_id = $2',
+    [memberIds, accountId]
+  );
+  if (membersCheck.rows.length !== memberIds.length) throw new AppError('Участники не принадлежат вашему аккаунту', 403);
+
+  const distanceIds = [...new Set(members.map((m: any) => m.distance_id))];
+  const distancesResult = await query('SELECT id, price_kopecks FROM event_distances WHERE id = ANY($1)', [distanceIds]);
+  const priceMap: Record<string, number> = {};
+  for (const d of distancesResult.rows) priceMap[d.id] = d.price_kopecks;
+
+  const registrations: any[] = [];
+  for (const m of members) {
+    const reg = await query(
+      `INSERT INTO event_registrations (user_id, event_id, distance_id, payment_status, corporate_member_id)
+       VALUES ($1, $2, $3, 'pending', $4) ON CONFLICT DO NOTHING RETURNING *`,
+      [userId, event_id, m.distance_id, m.member_id]
+    );
+    if (reg.rows.length > 0) registrations.push(reg.rows[0]);
+  }
+
+  const totalKopecks = members.reduce((sum: number, m: any) => sum + (priceMap[m.distance_id] || 0), 0);
+  if (totalKopecks <= 0) throw new AppError('Не удалось рассчитать стоимость', 400);
+
+  const { RobokassaService } = await import('../services/robokassa');
+  const invId = Math.floor(100000 + Math.random() * 900000);
+  const paymentResult = await query(
+    `INSERT INTO payments (user_id, robokassa_inv_id, amount_kopecks, description, metadata, status)
+     VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING *`,
+    [userId, invId, totalKopecks, `Корпоративная регистрация (${members.length} уч.)`,
+     JSON.stringify({ event_id, members, registration_ids: registrations.map(r => r.id) })]
+  );
+  const payment = paymentResult.rows[0];
+
+  const paymentUrl = RobokassaService.generatePaymentUrl(
+    invId, totalKopecks, 'Корпоративная регистрация Tour de Russie',
+    { Shp_userId: userId, Shp_paymentId: payment.id }
+  );
+
+  res.json({ paymentUrl, total_kopecks: totalKopecks, registrations_count: registrations.length });
 };

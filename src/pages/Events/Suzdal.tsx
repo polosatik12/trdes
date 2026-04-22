@@ -55,7 +55,7 @@ const hotels = [
 const borderColors = ['#fec800', '#e61c56'];
 
 const routes = [
-  { name: 'Median Tour', distance: '60 км', elevation: '~420 м', desc: 'Основой для маршрута в Суздале является круг протяжённостью чуть менее 60-ти километров, плюс расстояние от старта и обратно. Среднюю дистанцию MEDIAN Tour 60к выбирают участники, которые ещё не готовы к GRAND Tour 114k, но имеющие желание испытать свои возможности в живописных окрестностях Суздаля. На отметке 57 километров от старта, на развилке следует повернуть направо по указателю финиш 60к.', mapType: 'wikiloc' as const, wikilocId: '244753653' },
+  { name: 'Median Tour', distance: '60 км', elevation: '~420 м', desc: 'Основой для маршрута в Суздале является круг протяжённостью чуть менее 60-ти километров, плюс расстояние от старта и обратно. Среднюю дистанцию MEDIAN Tour 60к выбирают участники, которые ещё не готовы к GRAND Tour 114k, но имеющие желание испытать свои возможности в живописных окрестностях Суздаля. На отметке 57 километров от старта, на развилке следует повернуть направо по указателю финиш 60к.', mapType: 'mapmagic' as const, mapmagicUrl: 'https://mapmagic.app/embed?routes=07ZMz2V&title=MEDIAN+Tour+SUZDAL+60k' },
   { name: 'Grand Tour', distance: '114 км', elevation: '~850 м', desc: 'Полная дистанция протяжённостью 114 километров с набором высоты 850 метров, рассчитана на хорошо подготовленных спортсменов. После преодоления первого круга на отметке 57 км от старта на развилке следует повернуть налево по указателю 114 км второй круг. Соответственно после второго круга, на этой ключевой развилке следует сделать уже правый поворот в сторону финиша.', warning: 'Для участников дистанции 114 км присутствует лимит времени, по достижении которого контролёры начинают направлять участников в сторону финиша после первого круга.', mapType: 'wikiloc' as const, wikilocId: '244754075' }];
 
 const Suzdal: React.FC = () => {
@@ -237,7 +237,17 @@ const Suzdal: React.FC = () => {
            </div>
 
           <div className="w-full mb-8">
-            {routes[activeRoute].mapType === 'wikiloc' ? (
+            {routes[activeRoute].mapType === 'mapmagic' ? (
+              <iframe
+                width="1200"
+                height="700"
+                src={routes[activeRoute].mapmagicUrl}
+                title="Embeded MapMagic map with routes"
+                style={{ display: 'block', maxWidth: '100%' }}
+                frameBorder={0}
+                allowFullScreen
+              />
+            ) : routes[activeRoute].mapType === 'wikiloc' ? (
               <div>
                 <iframe
                   frameBorder="0"

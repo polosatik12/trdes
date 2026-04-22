@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middleware/errorHandler';
-import { authenticate, requireRole } from '../middleware/auth';
+import { cmsAuthenticate } from '../middleware/cmsAuth';
 import * as promoCodesController from '../controllers/promoCodesController';
 
 const router = Router();
@@ -11,9 +11,8 @@ router.post('/validate', asyncHandler(promoCodesController.validatePromoCode));
 // Public: increment usage (called on checkout)
 router.post('/use', asyncHandler(promoCodesController.usePromoCode));
 
-// Admin routes — require admin/organizer role
-router.use(authenticate);
-router.use(requireRole('admin', 'organizer'));
+// Admin routes — require CMS auth
+router.use(cmsAuthenticate);
 
 router.get('/', asyncHandler(promoCodesController.getAllPromoCodes));
 router.post('/', asyncHandler(promoCodesController.createPromoCode));

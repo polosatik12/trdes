@@ -15,11 +15,6 @@ const CRM: React.FC = () => {
   const checkAccess = async () => {
     if (DEV_BYPASS) { setState('authorized'); return; }
     setState('loading');
-    const token = localStorage.getItem('auth_token');
-    if (!token) {
-      setState('login');
-      return;
-    }
 
     try {
       const { data: userData } = await authAPI.getCurrentUser();
@@ -28,8 +23,6 @@ const CRM: React.FC = () => {
       const hasAccess = roles.some((r: any) => r.role === 'admin' || r.role === 'organizer');
       setState(hasAccess ? 'authorized' : 'denied');
     } catch (error) {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user');
       setState('login');
     }
   };
@@ -58,9 +51,7 @@ const CRM: React.FC = () => {
           <p className="text-white/60">У вашего аккаунта нет прав для доступа к CRM</p>
           <button
             onClick={() => {
-              localStorage.removeItem('auth_token');
-              localStorage.removeItem('user');
-              checkAccess();
+              authAPI.logout().finally(() => checkAccess());
             }}
             className="px-6 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-sm"
           >

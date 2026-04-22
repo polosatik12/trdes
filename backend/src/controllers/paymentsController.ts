@@ -4,6 +4,8 @@ import { query } from '../utils/db';
 import { AppError } from '../middleware/errorHandler';
 import { AuthRequest } from '../middleware/auth';
 import { RobokassaService } from '../services/robokassa';
+import { sendRegistrationConfirmation } from '../services/email';
+import { determineCategory, autoAssignBib } from '../services/bibService';
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:8080';
 
@@ -31,17 +33,18 @@ export const createPayment = async (req: AuthRequest, res: Response) => {
     throw new AppError('Требуется аутентификация', 401);
   }
 
-  // Calculate total
-  const totalKopecks = validData.cart.reduce((sum, item) => sum + item.price, 0);
+  // Calculate total: price in cart is in rubles
+  const totalRubles = validData.cart.reduce((sum, item) => sum + item.price, 0);
+  const totalKopecks = Math.round(totalRubles * 100);
 
-  if (totalKopecks <= 0) {
+  if (totalRubles <= 0) {
     throw new AppError('Сумма платежа должна быть больше 0', 400);
   }
 
   // Generate internal order ID
   const invId = Math.floor(100000 + Math.random() * 900000);
 
-  // Create payment record
+  // Create payment record (amount stored in kopecks)
   const paymentResult = await query(
     `INSERT INTO payments (user_id, robokassa_inv_id, amount_kopecks, description, metadata, status)
      VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING *`,
@@ -58,14 +61,14 @@ export const createPayment = async (req: AuthRequest, res: Response) => {
 
   // Build custom params for Robokassa
   const customParams: Record<string, string> = {
-    Shp_userId: userId,
     Shp_paymentId: payment.id,
+    Shp_userId: userId,
   };
 
-  // Generate Robokassa payment URL
+  // Generate Robokassa payment URL (OutSum in rubles)
   const paymentUrl = RobokassaService.generatePaymentUrl(
     invId,
-    totalKopecks,
+    totalRubles,
     `Регистрация на Tour de Russie`,
     customParams
   );
@@ -143,10 +146,114 @@ export const robokassaResultUrl = async (req: Request, res: Response) => {
     ]
   );
 
-  // TODO: Here you can add logic to:
-  // - Create event registrations from cart items
-  // - Send confirmation email
-  // - Update user profile
+  // Create event registrations from cart items
+  const cart = payment.metadata?.cart || [];
+  for (const item of cart) {
+    try {
+      // Map routeName to distance_km
+      const routeToKm: Record<string, number> = {
+        'Grand Tour': 114, 'Median Tour': 60, 'Intro Tour': 25,
+      };
+      const distanceKm = routeToKm[item.routeName];
+
+      // Resolve event_id and distance_id
+      const eventResult = await query(
+        distanceKm
+          ? `SELECT e.id as event_id, ed.id as distance_id
+             FROM events e
+             JOIN event_distances ed ON ed.event_id = e.id
+             WHERE e.name ILIKE $1 AND ed.distance_km = $2
+             LIMIT 1`
+          : `SELECT e.id as event_id, ed.id as distance_id
+             FROM events e
+             JOIN event_distances ed ON ed.event_id = e.id
+             WHERE e.name ILIKE $1 AND ed.name ILIKE $2
+             LIMIT 1`,
+        distanceKm ? [`%${item.city}%`, distanceKm] : [`%${item.city}%`, `%${item.routeName}%`]
+      );
+      if (eventResult.rows.length === 0) continue;
+      const { event_id, distance_id } = eventResult.rows[0];
+
+      // Get user profile and event date for category determination
+      const profileResult = await query(
+        `SELECT p.date_of_birth, p.gender, e.date as event_date, ed.distance_km
+         FROM profiles p, events e, event_distances ed
+         WHERE p.id = $1 AND e.id = $2 AND ed.id = $3`,
+        [payment.user_id, event_id, distance_id]
+      );
+
+      let bib_number: number | null = null;
+      let age_category: string | null = null;
+
+      if (profileResult.rows.length > 0) {
+        const { date_of_birth, gender, event_date, distance_km } = profileResult.rows[0];
+        if (date_of_birth && gender) {
+          const cat = determineCategory(distance_km, gender === 'male' ? 'male' : 'female', date_of_birth);
+          age_category = cat;
+          // Insert first, then auto-assign bib
+          const regInsert = await query(
+            `INSERT INTO event_registrations (user_id, event_id, distance_id, payment_status, age_category)
+             VALUES ($1, $2, $3, 'paid', $4)
+             ON CONFLICT (user_id, distance_id) DO UPDATE SET payment_status = 'paid', age_category = EXCLUDED.age_category
+             RETURNING id`,
+            [payment.user_id, event_id, distance_id, cat]
+          );
+          const regId = regInsert.rows[0]?.id;
+          if (regId) {
+            bib_number = await autoAssignBib(regId, event_id, cat);
+          }
+        }
+      }
+
+      if (bib_number === null && age_category === null) {
+        // Fallback: insert without bib
+        await query(
+          `INSERT INTO event_registrations (user_id, event_id, distance_id, payment_status)
+           VALUES ($1, $2, $3, 'paid')
+           ON CONFLICT (user_id, distance_id) DO UPDATE SET payment_status = 'paid'`,
+          [payment.user_id, event_id, distance_id]
+        );
+      }
+
+      // Send confirmation email
+      try {
+        const userResult = await query(
+          `SELECT u.email, p.first_name, p.last_name FROM users u
+           LEFT JOIN profiles p ON p.id = u.id
+           WHERE u.id = $1`,
+          [payment.user_id]
+        );
+        const eventInfoResult = await query(
+          `SELECT e.name, e.date, e.location, ed.name as distance_name
+           FROM events e JOIN event_distances ed ON ed.id = $1
+           WHERE e.id = $2`,
+          [distance_id, event_id]
+        );
+        if (userResult.rows.length > 0 && eventInfoResult.rows.length > 0) {
+          const u = userResult.rows[0];
+          const ev = eventInfoResult.rows[0];
+          const fullName = [u.last_name, u.first_name].filter(Boolean).join(' ') || u.email;
+          const eventDate = ev.date ? new Date(ev.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+          const cityKey = (ev.location || '').toLowerCase().includes('суздал') ? 'suzdal'
+            : (ev.location || '').toLowerCase().includes('игор') ? 'igora'
+            : 'pushkin';
+          await sendRegistrationConfirmation(u.email, {
+            fullName,
+            eventName: ev.name,
+            eventDate,
+            eventLocation: ev.location || item.city,
+            distance: item.distance || ev.distance_name,
+            bibNumber: bib_number ?? 0,
+            city: cityKey,
+          });
+        }
+      } catch (emailErr) {
+        console.error('Failed to send confirmation email:', emailErr);
+      }
+    } catch (err) {
+      console.error('Failed to create registration for cart item:', item, err);
+    }
+  }
 
   console.log(`Payment ${payment.id} (InvId: ${InvId}) marked as paid. Amount: ${OutSum}`);
 
@@ -182,6 +289,12 @@ export const robokassaSuccessUrl = async (req: Request, res: Response) => {
 // Robokassa FailURL redirect
 export const robokassaFailUrl = async (req: Request, res: Response) => {
   const { InvId } = req.query;
+  if (InvId) {
+    await query(
+      `UPDATE payments SET status = 'failed', updated_at = NOW() WHERE robokassa_inv_id = $1 AND status = 'pending'`,
+      [parseInt(InvId as string)]
+    ).catch((err) => console.error('Failed to mark payment as failed:', err));
+  }
   res.redirect(`${FRONTEND_URL}/dashboard/payments/failed?invId=${InvId || ''}`);
 };
 

@@ -136,13 +136,15 @@ const Payments: React.FC<PaymentsProps> = ({ status: routeStatus }) => {
                       {getStatusIcon(payment.status)}
                       <div>
                         <p className="font-medium text-foreground">{payment.description}</p>
+                        {payment.metadata?.cart?.map((item: any, i: number) => (
+                          <p key={i} className="text-sm text-muted-foreground">
+                            {item.eventName} — {item.distance}
+                          </p>
+                        ))}
                         <p className="text-sm text-muted-foreground">
                           {new Date(payment.created_at).toLocaleDateString('ru-RU', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
+                            day: 'numeric', month: 'long', year: 'numeric',
+                            hour: '2-digit', minute: '2-digit',
                           })}
                           {payment.paid_at && ` · Оплачен: ${new Date(payment.paid_at).toLocaleDateString('ru-RU')}`}
                         </p>

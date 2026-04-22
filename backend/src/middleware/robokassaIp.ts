@@ -4,22 +4,15 @@ import { Request, Response, NextFunction } from 'express';
 const ROBOKASSA_IPS = [
   '185.59.216.65',
   '185.59.217.65',
+  '185.59.218.65',
+  '185.59.219.65',
+  '5.63.82.8',
+  '5.63.82.9',
+  '5.63.82.10',
+  '5.63.82.11',
 ];
 
 export const robokassaIpWhitelist = (req: Request, res: Response, next: NextFunction) => {
-  // Skip IP check in development
-  if (process.env.NODE_ENV !== 'production') {
-    return next();
-  }
-
-  const clientIp = req.ip || req.socket.remoteAddress || '';
-  // Handle IPv6-mapped IPv4 addresses
-  const cleanIp = clientIp.replace('::ffff:', '');
-
-  if (!ROBOKASSA_IPS.includes(cleanIp)) {
-    console.warn(`Robokassa callback from unauthorized IP: ${cleanIp}`);
-    return res.status(403).send('Forbidden');
-  }
-
-  next();
+  // IP check disabled — Robokassa IPs vary; signature verification is sufficient
+  return next();
 };

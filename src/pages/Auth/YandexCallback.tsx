@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -8,6 +9,7 @@ const YandexCallback: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { loginWithToken } = useAuth();
   const handled = useRef(false);
 
   useEffect(() => {
@@ -25,7 +27,6 @@ const YandexCallback: React.FC = () => {
     }
 
     if (code) {
-      // Фронтенд получил code от Яндекса — отправляем на бэкенд
       fetch(`${API_URL}/auth/yandex/exchange`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -44,7 +45,6 @@ const YandexCallback: React.FC = () => {
     }
 
     if (token) {
-      // Бэкенд сделал redirect с token (запасной вариант)
       handleToken(token);
       return;
     }
@@ -60,14 +60,8 @@ const YandexCallback: React.FC = () => {
       return;
     }
 
-    localStorage.setItem('auth_token', token);
-
     try {
-      const res = await fetch(`${API_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      localStorage.setItem('user', JSON.stringify(data.user));
+      await loginWithToken(token);
       toast({ title: 'Добро пожаловать!', description: 'Вы успешно вошли через Яндекс' });
       navigate('/dashboard');
     } catch {

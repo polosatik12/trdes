@@ -76,10 +76,10 @@ export const getAllPromoCodes = async (req: AuthRequest, res: Response) => {
 // Admin: Create promo code
 const createPromoSchema = z.object({
   discount_percent: z.number().int().min(1).max(100),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   max_uses: z.number().int().min(1).optional().nullable(),
   expires_at: z.string().optional().nullable(),
-  code: z.string().min(1).optional(), // If not provided, auto-generate
+  code: z.string().min(1).optional(),
   length: z.number().int().min(4).max(16).optional().default(8),
 });
 
@@ -119,7 +119,7 @@ export const createPromoCode = async (req: AuthRequest, res: Response) => {
 // Admin: Update promo code
 const updatePromoSchema = z.object({
   discount_percent: z.number().int().min(1).max(100).optional(),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   max_uses: z.number().int().min(1).optional().nullable(),
   expires_at: z.string().optional().nullable(),
   is_active: z.boolean().optional(),

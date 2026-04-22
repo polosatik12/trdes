@@ -5,23 +5,23 @@ import { AppError } from '../middleware/errorHandler';
 import { AuthRequest } from '../middleware/auth';
 
 const profileSchema = z.object({
-  first_name: z.string().optional(),
-  last_name: z.string().optional(),
-  patronymic: z.string().optional(),
-  date_of_birth: z.string().optional(),
-  gender: z.enum(['male', 'female']).optional(),
-  phone: z.string().optional(),
-  country: z.string().optional(),
-  region: z.string().optional(),
-  city: z.string().optional(),
-  participation_type: z.string().optional(),
-  team_name: z.string().optional(),
+  first_name: z.string().nullable().optional(),
+  last_name: z.string().nullable().optional(),
+  patronymic: z.string().nullable().optional(),
+  date_of_birth: z.string().nullable().optional(),
+  gender: z.enum(['male', 'female']).nullable().optional(),
+  phone: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+  region: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
+  participation_type: z.string().nullable().optional(),
+  team_name: z.string().nullable().optional(),
 });
 
 const emergencyContactSchema = z.object({
   name: z.string().min(1, 'Имя обязательно'),
   phone: z.string().min(1, 'Телефон обязателен'),
-  relationship: z.string().optional(),
+  relationship: z.string().nullable().optional(),
 });
 
 export const getProfile = async (req: AuthRequest, res: Response) => {
@@ -106,4 +106,32 @@ export const deleteEmergencyContact = async (req: AuthRequest, res: Response) =>
   }
 
   res.json({ success: true });
+};
+
+const VALID_CONSENT_TYPES = ['privacy_policy', 'waiver', 'photo_consent', 'terms_of_service', 'personal_data_consent'];
+
+export const getConsents = async (req: AuthRequest, res: Response) => {
+  const result = await query(
+    'SELECT consent_type, accepted_at, document_version FROM user_consents WHERE user_id = $1',
+    [req.userId]
+  );
+  res.json({ consents: result.rows });
+};
+
+export const createConsent = async (req: AuthRequest, res: Response) => {
+  const { consent_type, document_version } = req.body;
+
+  if (!VALID_CONSENT_TYPES.includes(consent_type)) {
+    throw new AppError('Недопустимый тип документа', 400);
+  }
+
+  const result = await query(
+    `INSERT INTO user_consents (user_id, consent_type, document_version)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (user_id, consent_type) DO UPDATE SET accepted_at = NOW(), document_version = $3
+     RETURNING consent_type, accepted_at, document_version`,
+    [req.userId, consent_type, document_version || '1.0']
+  );
+
+  res.json({ consent: result.rows[0] });
 };

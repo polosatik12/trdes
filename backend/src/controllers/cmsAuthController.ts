@@ -32,7 +32,6 @@ export const login = async (req: Request, res: Response) => {
     throw new AppError('Неверное имя пользователя или пароль', 401);
   }
 
-  // @ts-expect-error - JWT expiresIn typing
   const token = jwt.sign(
     { cmsUserId: user.id, cmsUserRole: user.role },
     JWT_SECRET,

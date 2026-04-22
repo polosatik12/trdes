@@ -13,7 +13,7 @@ router.post('/login', authLimiter, asyncHandler(authController.login));
 router.post('/logout', authenticate, asyncHandler(authController.logout));
 router.get('/me', authenticate, asyncHandler(authController.getCurrentUser));
 router.post('/refresh', asyncHandler(authController.refreshToken));
-router.post('/send-password-reset-code', emailLimiter, asyncHandler(authController.sendPasswordResetCode));
+router.post('/change-email', authenticate, authLimiter, asyncHandler(authController.changeEmail));
 router.post('/reset-password', asyncHandler(authController.resetPassword));
 
 export default router;

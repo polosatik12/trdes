@@ -11,5 +11,7 @@ router.get('/emergency-contacts', authenticate, asyncHandler(profileController.g
 router.post('/emergency-contacts', authenticate, asyncHandler(profileController.createEmergencyContact));
 router.put('/emergency-contacts/:id', authenticate, asyncHandler(profileController.updateEmergencyContact));
 router.delete('/emergency-contacts/:id', authenticate, asyncHandler(profileController.deleteEmergencyContact));
+router.get('/consents', authenticate, asyncHandler(profileController.getConsents));
+router.post('/consents', authenticate, asyncHandler(profileController.createConsent));
 
 export default router;

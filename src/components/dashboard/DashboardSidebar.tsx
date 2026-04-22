@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faCalendarDays, faFileLines, faHeart, faCreditCard, faHouse, faCartShopping, faRightFromBracket, faXmark, faShieldHalved, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faCalendarDays, faFileLines, faHeart, faCreditCard, faHouse, faCartShopping, faRightFromBracket, faXmark, faShieldHalved, faUsers, faBuilding, faUsersRectangle } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -16,10 +16,11 @@ const menuItems: { path: string; icon: IconDefinition; label: string; corporateO
   { path: '/dashboard', icon: faHouse, label: 'Главная' },
   { path: '/dashboard/profile', icon: faUser, label: 'Профиль' },
   { path: '/dashboard/members', icon: faUsers, label: 'Сотрудники', corporateOnly: true },
+  { path: '/dashboard/corporate-profile', icon: faBuilding, label: 'Профиль организации', corporateOnly: true },
+  { path: '/dashboard/corporate-registration', icon: faUsersRectangle, label: 'Регистрация команды', corporateOnly: true },
   { path: '/dashboard/participations', icon: faCalendarDays, label: 'Мои участия' },
   { path: '/dashboard/documents', icon: faFileLines, label: 'Документы' },
   { path: '/dashboard/health', icon: faHeart, label: 'Медицинский допуск' },
-  { path: '/dashboard/insurance', icon: faShieldHalved, label: 'Страховка' },
   { path: '/dashboard/payments', icon: faCreditCard, label: 'Платежи' },
   { path: '/dashboard/cart', icon: faCartShopping, label: 'Корзина' },
 ];

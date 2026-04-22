@@ -44,8 +44,12 @@ interface Registration {
   bib_number: number | null;
   payment_status: string;
   created_at: string;
-  events: { name: string; date: string; location: string; status: string } | null;
-  event_distances: { name: string; distance_km: number } | null;
+  event_name: string;
+  event_date: string;
+  event_location: string;
+  event_status: string;
+  distance_name: string;
+  distance_km: number;
 }
 
 const Participations: React.FC = () => {
@@ -155,8 +159,8 @@ const Participations: React.FC = () => {
     load();
   }, [user]);
 
-  const upcomingRegs = registrations.filter(r => r.events?.status === 'upcoming' || r.events?.status === 'ongoing');
-  const pastRegs = registrations.filter(r => r.events?.status === 'completed');
+  const upcomingRegs = registrations.filter(r => r.event_status === 'upcoming' || r.event_status === 'ongoing');
+  const pastRegs = registrations.filter(r => r.event_status === 'completed');
 
   const openRegistration = (ev: EventWithDistances) => {
     setSelectedEvent(ev);
@@ -277,13 +281,13 @@ const Participations: React.FC = () => {
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="font-semibold text-foreground">{r.events?.name}</h3>
+                          <h3 className="font-semibold text-foreground">{r.event_name}</h3>
                           <p className="text-sm text-muted-foreground mt-1">
                             <MapPin className="inline w-3 h-3 mr-1" />
-                            {r.events?.location} · {r.events?.date ? new Date(r.events.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
+                            {r.event_location} · {r.event_date ? new Date(r.event_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
                           </p>
                           <p className="text-sm text-muted-foreground mt-1">
-                            Дистанция: {getDisplayDistanceName(r.event_distances?.name || '')} ({formatDistance(r.event_distances?.distance_km || 0)} км)
+                            Дистанция: {getDisplayDistanceName(r.distance_name || '')} ({formatDistance(r.distance_km || 0)} км)
                             {r.bib_number && <> · Номер: <span className="font-medium text-foreground">{r.bib_number}</span></>}
                           </p>
                         </div>
@@ -315,9 +319,9 @@ const Participations: React.FC = () => {
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="font-semibold text-foreground">{r.events?.name}</h3>
+                          <h3 className="font-semibold text-foreground">{r.event_name}</h3>
                           <p className="text-sm text-muted-foreground">
-                            {getDisplayDistanceName(r.event_distances?.name || '')} ({formatDistance(r.event_distances?.distance_km || 0)} км)
+                            {getDisplayDistanceName(r.distance_name || '')} ({formatDistance(r.distance_km || 0)} км)
                           </p>
                         </div>
                         <Badge variant="secondary">Завершено</Badge>
@@ -500,152 +504,38 @@ const Participations: React.FC = () => {
           {selectedRegistration && (
             <div className="space-y-4">
               <div>
-                <h3 className="font-semibold text-foreground mb-1">
-                  {getDisplayDistanceName(selectedRegistration.event_distances?.name || '')} — {formatDistance(selectedRegistration.event_distances?.distance_km || 0)} км
+                <h3 className="font-semibold text-foreground text-lg">
+                  {getDisplayDistanceName(selectedRegistration.distance_name || '')} — {formatDistance(selectedRegistration.distance_km || 0)} км
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  {selectedRegistration.events?.location} · {selectedRegistration.events?.date ? new Date(selectedRegistration.events.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
+                <p className="text-sm text-muted-foreground mt-1">
+                  <MapPin className="inline w-3 h-3 mr-1" />
+                  {selectedRegistration.event_location} · {selectedRegistration.event_date ? new Date(selectedRegistration.event_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
                 </p>
-                {selectedRegistration.bib_number && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Стартовый номер: <span className="font-medium text-foreground">{selectedRegistration.bib_number}</span>
-                  </p>
-                )}
+                <p className="text-sm text-muted-foreground mt-1">{selectedRegistration.event_name}</p>
               </div>
 
-              <div className="border-t border-border pt-4">
-                <p className="text-sm font-medium text-foreground mb-2">Базовая регистрация:</p>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Стоимость участия</span>
-                  <span className="font-semibold text-foreground">6 000 ₽</span>
+              {selectedRegistration.bib_number && (
+                <div className="bg-muted/40 rounded-lg p-4 text-center">
+                  <p className="text-sm text-muted-foreground mb-1">Ваш стартовый номер</p>
+                  <span className="text-5xl font-bold text-primary">{selectedRegistration.bib_number}</span>
                 </div>
+              )}
+
+              <div className="flex justify-between items-center py-2 border-t border-border">
+                <span className="text-sm text-muted-foreground">Статус оплаты</span>
+                <Badge variant={selectedRegistration.payment_status === 'paid' ? 'default' : 'outline'}>
+                  {selectedRegistration.payment_status === 'paid' ? 'Оплачено' : 'Ожидает оплаты'}
+                </Badge>
               </div>
 
-              {/* Insurance Button */}
-              <div className="border-t border-border pt-4">
-                <a
-                  href="https://shop.sogaz.ru/corp/d6x113/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full text-center py-3 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold uppercase tracking-wider rounded-sm transition-colors"
-                >
-                  Купить страховку
-                </a>
-              </div>
-
-              {/* VIP Section */}
-              <div className="border border-border rounded-lg overflow-hidden">
-                <button
-                  onClick={() => setVipExpanded(!vipExpanded)}
-                  className="w-full flex items-center justify-between p-4 bg-muted/30 hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <Checkbox
-                      checked={vipSelected}
-                      onCheckedChange={(checked) => setVipSelected(checked === true)}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    <span className="font-bold text-foreground">Выбрать VIP Пакет</span>
-                  </div>
-                  {vipExpanded ? (
-                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                  )}
-                </button>
-
-                {vipExpanded && (
-                  <div className="p-4 bg-background space-y-3">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm font-medium text-foreground">VIP Пакет включает:</p>
-                      <span className="font-bold text-lg text-primary">7 000 ₽</span>
-                    </div>
-                    <ul className="space-y-2 text-sm text-foreground">
-                      <li className="flex items-start gap-2">
-                        <span className="text-primary mt-0.5">✓</span>
-                        <span>Завтрак в VIP шатре</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-primary mt-0.5">✓</span>
-                        <span>VIP парковка</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-primary mt-0.5">✓</span>
-                        <span>Регистрация в VIP стойке</span>
-                      </li>
-                    </ul>
-                  </div>
-                )}
-              </div>
-
-              {/* Promo Code in Details */}
-              <div className="border-t border-border pt-4">
-                <p className="text-sm font-medium text-foreground mb-2">Промокод</p>
-                {!detailsPromoApplied ? (
-                  <div className="flex gap-2">
-                    <Input
-                      type="text"
-                      placeholder="Введите промокод"
-                      value={detailsPromoCode}
-                      onChange={(e) => {
-                        setDetailsPromoCode(e.target.value);
-                        setDetailsPromoError('');
-                      }}
-                      className="flex-1"
-                      onKeyDown={(e) => e.key === 'Enter' && handleDetailsApplyPromo()}
-                    />
-                    <Button onClick={handleDetailsApplyPromo} variant="outline" className="shrink-0">
-                      Применить
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-4 py-2">
-                    <div>
-                      <span className="text-sm font-semibold text-green-700">{detailsPromoCode.toUpperCase()}</span>
-                      <span className="text-sm text-green-600 ml-2">— скидка {detailsPromoDiscount}%</span>
-                    </div>
-                    <button onClick={handleDetailsRemovePromo} className="text-sm text-red-500 hover:text-red-700 font-medium">
-                      Убрать
-                    </button>
-                  </div>
-                )}
-                {detailsPromoError && <p className="text-sm text-destructive mt-1">{detailsPromoError}</p>}
-              </div>
-
-              <div className="flex items-center justify-between border-t border-border pt-4">
-                <span className="text-sm text-muted-foreground">Итого к оплате</span>
-                <span className="font-extrabold text-2xl text-primary">
-                  {(() => {
-                    const basePrice = vipSelected ? 11000 : 6000;
-                    const discountedPrice = detailsPromoApplied
-                      ? Math.round(basePrice * (1 - detailsPromoDiscount / 100))
-                      : basePrice;
-                    return `${discountedPrice.toLocaleString('ru-RU')} ₽`;
-                  })()}
-                </span>
-              </div>
-
-              <div className="flex items-start gap-3 border-t border-border pt-4">
-                <Checkbox
-                  id="agree-details"
-                  checked={detailsAgreed}
-                  onCheckedChange={(checked) => setDetailsAgreed(checked === true)}
-                />
-                <label
-                  htmlFor="agree-details"
-                  className="text-sm text-foreground leading-snug cursor-pointer"
-                >
-                  С условиями ознакомлен и подтверждаю
-                </label>
-              </div>
-
-              <Button
-                onClick={handlePurchaseFromDetails}
-                disabled={!detailsAgreed}
-                className="w-full bg-primary hover:bg-primary/90 text-white font-bold uppercase tracking-wider"
+              <a
+                href="https://shop.sogaz.ru/corp/d6x113/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full text-center py-3 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold uppercase tracking-wider rounded-sm transition-colors"
               >
-                Перейти к покупке
-              </Button>
+                Купить страховку
+              </a>
             </div>
           )}
         </DialogContent>

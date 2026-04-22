@@ -8,7 +8,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEnvelope, faLock, faSpinner, faUser, faShieldHalved, faBuilding } from '@fortawesome/free-solid-svg-icons';
+import { faEnvelope, faLock, faSpinner, faUser, faShieldHalved, faBuilding, faEye, faEyeSlash, faVenusMars } from '@fortawesome/free-solid-svg-icons';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { differenceInYears, format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { authAPI, profileAPI } from '@/lib/api';
@@ -26,7 +27,10 @@ const RegisterForm: React.FC = () => {
 
   // Individual form state
   const [email, setEmail] = useState('');
+  const [lastName, setLastName] = useState('');
   const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [gender, setGender] = useState<'male' | 'female' | ''>('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -35,6 +39,8 @@ const RegisterForm: React.FC = () => {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { signUp, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -52,8 +58,16 @@ const RegisterForm: React.FC = () => {
   const handleIndividualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!lastName.trim()) {
+      toast({ title: 'Ошибка', description: 'Введите фамилию', variant: 'destructive' });
+      return;
+    }
     if (!firstName.trim()) {
       toast({ title: 'Ошибка', description: 'Введите имя', variant: 'destructive' });
+      return;
+    }
+    if (!gender) {
+      toast({ title: 'Ошибка', description: 'Выберите пол', variant: 'destructive' });
       return;
     }
     if (!dateOfBirth) {
@@ -121,8 +135,10 @@ const RegisterForm: React.FC = () => {
         if (data?.user) {
           try {
             await profileAPI.updateProfile({
-              first_name: firstName.trim(),
+              first_name: `${firstName.trim()} ${middleName.trim()}`.trim(),
+              last_name: lastName.trim(),
               date_of_birth: dateOfBirth,
+              gender: gender as 'male' | 'female',
               participation_type: 'individual',
             });
           } catch (updateError: any) {
@@ -220,22 +236,9 @@ const RegisterForm: React.FC = () => {
     );
   }
 
-  // --- Шаг 1: Форма регистрации с вкладками ---
+  // --- Шаг 1: Форма регистрации ---
   return (
     <div className="space-y-4">
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'individual' | 'corporate')}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="individual" className="flex items-center gap-2">
-            <FontAwesomeIcon icon={faUser} className="h-4 w-4" />
-            Физическое лицо
-          </TabsTrigger>
-          <TabsTrigger value="corporate" className="flex items-center gap-2">
-            <FontAwesomeIcon icon={faBuilding} className="h-4 w-4" />
-            Юридическое лицо
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="individual" className="mt-4">
           <form onSubmit={handleIndividualSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="register-email">Email</Label>
@@ -254,17 +257,61 @@ const RegisterForm: React.FC = () => {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="register-lastname">Фамилия</Label>
+              <div className="relative">
+                <FontAwesomeIcon icon={faUser} className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="register-lastname"
+                  type="text"
+                  placeholder="Иванов"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="register-name">Имя</Label>
               <div className="relative">
                 <FontAwesomeIcon icon={faUser} className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="register-name"
                   type="text"
-                  placeholder="Ваше имя"
+                  placeholder="Иван"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   className="pl-10"
                   required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Пол</Label>
+              <Select value={gender} onValueChange={(v) => setGender(v as 'male' | 'female')}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите пол" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Мужской</SelectItem>
+                  <SelectItem value="female">Женский</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="register-middlename">Отчество</Label>
+              <div className="relative">
+                <FontAwesomeIcon icon={faUser} className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="register-middlename"
+                  type="text"
+                  placeholder="Иванович (необязательно)"
+                  value={middleName}
+                  onChange={(e) => setMiddleName(e.target.value)}
+                  className="pl-10"
                 />
               </div>
             </div>
@@ -313,14 +360,17 @@ const RegisterForm: React.FC = () => {
                 <FontAwesomeIcon icon={faLock} className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="register-password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="Мин. 8 символов, A-a, спецсимвол"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 pr-10"
                   required
                   minLength={8}
                 />
+                <button type="button" onClick={() => setShowPassword(p => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} className="h-4 w-4" />
+                </button>
               </div>
             </div>
 
@@ -330,14 +380,17 @@ const RegisterForm: React.FC = () => {
                 <FontAwesomeIcon icon={faLock} className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="confirm-password"
-                  type="password"
+                  type={showConfirmPassword ? 'text' : 'password'}
                   placeholder="Повторите пароль"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 pr-10"
                   required
                   minLength={8}
                 />
+                <button type="button" onClick={() => setShowConfirmPassword(p => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  <FontAwesomeIcon icon={showConfirmPassword ? faEyeSlash : faEye} className="h-4 w-4" />
+                </button>
               </div>
             </div>
 
@@ -403,12 +456,6 @@ const RegisterForm: React.FC = () => {
               )}
             </Button>
           </form>
-        </TabsContent>
-
-        <TabsContent value="corporate" className="mt-4">
-          <CorporateRegisterForm />
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };

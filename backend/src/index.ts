@@ -4,6 +4,9 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import path from 'path';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './swagger';
+import { authenticate } from './middleware/auth';
 import { errorHandler } from './middleware/errorHandler';
 import { apiLimiter } from './middleware/rateLimiter';
 import authRoutes from './routes/auth';
@@ -28,20 +31,56 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(helmet());
+app.set('trust proxy', 1);
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://auth.robokassa.ru", "https://services.robokassa.ru"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "https://login.yandex.ru", "https://auth.robokassa.ru", "https://services.robokassa.ru"],
+      frameSrc: ["'self'", "https://mapmagic.app", "https://www.wikiloc.com", "https://ridewithgps.com"],
+      fontSrc: ["'self'", "data:"],
+      objectSrc: ["'none'"],
+    },
+  },
+}));
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:8080',
+  'http://localhost:5173',
+  'http://localhost:3001',
+  'http://localhost:8080',
+  'http://localhost:8081',
+];
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:8080',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(cookieParser());
 app.use('/api', apiLimiter);
 
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+app.use('/uploads', authenticate, express.static(path.join(process.cwd(), 'uploads')));
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// Swagger UI — только в dev
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    swaggerOptions: { persistAuthorization: true },
+  }));
+  app.get('/api-docs.json', (_req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', 'attachment; filename="swagger.json"');
+    res.send(swaggerSpec);
+  });
+}
+
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok' });
 });
 
 app.use('/api/auth', authRoutes);

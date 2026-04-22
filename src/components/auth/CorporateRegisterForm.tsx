@@ -7,8 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEnvelope, faLock, faSpinner, faBuilding, faShieldHalved } from '@fortawesome/free-solid-svg-icons';
-import { authAPI, corporateAccountsAPI } from '@/lib/api';
+import { faEnvelope, faLock, faSpinner, faBuilding, faShieldHalved, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { authAPI, corporateAccountsAPI, profileAPI } from '@/lib/api';
 
 type Step = 'form' | 'code';
 
@@ -32,11 +32,13 @@ const CorporateRegisterForm: React.FC = () => {
 
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
 
-  const { signUp } = useAuth();
+  const { signUp, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -148,6 +150,8 @@ const CorporateRegisterForm: React.FC = () => {
       } else {
         if (data?.user) {
           try {
+            await profileAPI.updateProfile({ participation_type: 'corporate' });
+            await refreshProfile();
             // Create corporate account
             await corporateAccountsAPI.createAccount({
               company_full_name: companyFullName,
@@ -426,14 +430,17 @@ const CorporateRegisterForm: React.FC = () => {
               <FontAwesomeIcon icon={faLock} className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="register-password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 placeholder="Мин. 8 символов, A-a, спецсимвол"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="pl-10"
+                className="pl-10 pr-10"
                 required
                 minLength={8}
               />
+              <button type="button" onClick={() => setShowPassword(p => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} className="h-4 w-4" />
+              </button>
             </div>
           </div>
 
@@ -443,14 +450,17 @@ const CorporateRegisterForm: React.FC = () => {
               <FontAwesomeIcon icon={faLock} className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="confirm-password"
-                type="password"
+                type={showConfirmPassword ? 'text' : 'password'}
                 placeholder="Повторите пароль"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="pl-10"
+                className="pl-10 pr-10"
                 required
                 minLength={8}
               />
+              <button type="button" onClick={() => setShowConfirmPassword(p => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <FontAwesomeIcon icon={showConfirmPassword ? faEyeSlash : faEye} className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>

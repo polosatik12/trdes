@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan, faCartShopping, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan, faCartShopping, faSpinner, faCircleExclamation } from '@fortawesome/free-solid-svg-icons';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { paymentsAPI } from '@/lib/api';
+import { paymentsAPI, profileAPI, healthCertificatesAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import api from '@/lib/api';
 
 interface CartItem {
   eventSlug: string;
@@ -26,6 +27,8 @@ const Cart: React.FC = () => {
   const navigate = useNavigate();
   const [items, setItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [blockers, setBlockers] = useState<{ label: string; path: string }[]>([]);
+  const [checkingBlockers, setCheckingBlockers] = useState(true);
 
   useEffect(() => {
     const stored = localStorage.getItem('tdr_cart');
@@ -37,6 +40,41 @@ const Cart: React.FC = () => {
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const check = async () => {
+      const issues: { label: string; path: string }[] = [];
+      try {
+        const { data: profileData } = await profileAPI.getProfile();
+        const p = profileData.profile;
+        if (!p.first_name || !p.last_name || !p.phone || !p.date_of_birth || !p.city) {
+          issues.push({ label: 'Заполните профиль (имя, фамилия, телефон, дата рождения, город)', path: '/dashboard/profile' });
+        }
+      } catch { issues.push({ label: 'Заполните профиль', path: '/dashboard/profile' }); }
+
+      try {
+        const { data: ecData } = await api.get('/profile/emergency-contacts');
+        const ec = ecData.contacts?.[0];
+        if (!ec || !ec.name || !ec.phone) {
+          issues.push({ label: 'Укажите экстренный контакт', path: '/dashboard/profile' });
+        }
+      } catch { issues.push({ label: 'Укажите экстренный контакт', path: '/dashboard/profile' }); }
+
+      try {
+        const { data: consentsData } = await api.get('/profile/consents');
+        const signed = (consentsData.consents || []).map((c: any) => c.consent_type);
+        const required = ['personal_data_consent', 'privacy_policy', 'waiver', 'photo_consent', 'terms_of_service'];
+        if (!required.every(t => signed.includes(t))) {
+          issues.push({ label: 'Подпишите все документы', path: '/dashboard/documents' });
+        }
+      } catch { issues.push({ label: 'Подпишите все документы', path: '/dashboard/documents' }); }
+
+      setBlockers(issues);
+      setCheckingBlockers(false);
+    };
+    check();
+  }, [user]);
 
   const removeItem = (index: number) => {
     const updated = items.filter((_, i) => i !== index);
@@ -50,6 +88,11 @@ const Cart: React.FC = () => {
     if (!user) {
       toast.error('Войдите в систему для оплаты');
       navigate('/auth');
+      return;
+    }
+
+    if (blockers.length > 0) {
+      toast.error('Выполните все требования перед оплатой');
       return;
     }
 
@@ -132,10 +175,28 @@ const Cart: React.FC = () => {
               </span>
             </div>
 
+            {blockers.length > 0 && (
+              <div className="border border-destructive/50 bg-destructive/5 rounded-lg p-4 space-y-2">
+                <div className="flex items-center gap-2 text-destructive font-medium">
+                  <FontAwesomeIcon icon={faCircleExclamation} className="h-4 w-4" />
+                  Для оплаты необходимо:
+                </div>
+                {blockers.map((b, i) => (
+                  <button
+                    key={i}
+                    onClick={() => navigate(b.path)}
+                    className="block text-sm text-destructive hover:underline text-left"
+                  >
+                    → {b.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <Button
               onClick={handleCheckout}
               className="w-full bg-[hsl(201,72%,30%)] hover:bg-[hsl(201,72%,37%)] text-white font-bold uppercase tracking-wider py-3"
-              disabled={loading}
+              disabled={loading || checkingBlockers || blockers.length > 0}
             >
               {loading ? (
                 <>

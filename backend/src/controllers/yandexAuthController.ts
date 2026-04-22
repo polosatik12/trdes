@@ -33,22 +33,26 @@ export const getYandexAuthUrl = (req: Request, res: Response) => {
  * Handle Yandex OAuth callback
  */
 export const yandexCallback = async (req: Request, res: Response) => {
-  const { code, state } = req.query;
+  const { code: rawCode, state } = req.query;
 
-  if (!code) {
+  if (!rawCode) {
     throw new AppError('Код авторизации не получен', 400);
   }
 
+  const code = rawCode as string;
+
   // Exchange code for access token
-  const tokenResponse = await axios.post('https://oauth.yandex.ru/token', null, {
-    params: {
+  const tokenResponse = await axios.post(
+    'https://oauth.yandex.ru/token',
+    new URLSearchParams({
       grant_type: 'authorization_code',
       code,
       client_id: YANDEX_CLIENT_ID,
       client_secret: YANDEX_CLIENT_SECRET,
       redirect_uri: YANDEX_REDIRECT_URI,
-    },
-  });
+    }),
+    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+  );
 
   const accessToken = tokenResponse.data.access_token;
 
@@ -102,8 +106,8 @@ export const yandexCallback = async (req: Request, res: Response) => {
     userId = userResult.rows[0].id;
     userRole = 'participant';
 
-    await query('INSERT INTO profiles (id) VALUES ($1)', [userId]);
-    await query('INSERT INTO user_roles (user_id, role) VALUES ($1, $2)', [userId, 'participant']);
+    await query('INSERT INTO profiles (id) VALUES ($1) ON CONFLICT (id) DO NOTHING', [userId]);
+    await query('INSERT INTO user_roles (user_id, role) VALUES ($1, $2) ON CONFLICT ON CONSTRAINT user_roles_user_id_role_key DO NOTHING', [userId, 'participant']);
 
     // Link Yandex ID
     await query(
@@ -136,7 +140,7 @@ export const yandexCallback = async (req: Request, res: Response) => {
   const redirectUrl = new URL(`${frontendUrl}/auth/yandex/success`);
   redirectUrl.searchParams.set('token', token);
   if (state) {
-    redirectUrl.searchParams.set('state', state);
+    redirectUrl.searchParams.set('state', state as string);
   }
 
   res.redirect(redirectUrl.toString());
@@ -153,15 +157,17 @@ export const yandexExchange = async (req: Request, res: Response) => {
   }
 
   // Exchange code for access token
-  const tokenResponse = await axios.post('https://oauth.yandex.ru/token', null, {
-    params: {
+  const tokenResponse = await axios.post(
+    'https://oauth.yandex.ru/token',
+    new URLSearchParams({
       grant_type: 'authorization_code',
       code,
       client_id: YANDEX_CLIENT_ID,
       client_secret: YANDEX_CLIENT_SECRET,
       redirect_uri: YANDEX_REDIRECT_URI,
-    },
-  });
+    }),
+    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+  );
 
   const accessToken = tokenResponse.data.access_token;
 
@@ -205,8 +211,8 @@ export const yandexExchange = async (req: Request, res: Response) => {
     );
     userId = userResult.rows[0].id;
     userRole = 'participant';
-    await query('INSERT INTO profiles (id) VALUES ($1)', [userId]);
-    await query('INSERT INTO user_roles (user_id, role) VALUES ($1, $2)', [userId, 'participant']);
+    await query('INSERT INTO profiles (id) VALUES ($1) ON CONFLICT (id) DO NOTHING', [userId]);
+    await query('INSERT INTO user_roles (user_id, role) VALUES ($1, $2) ON CONFLICT ON CONSTRAINT user_roles_user_id_role_key DO NOTHING', [userId, 'participant']);
     await query(
       `INSERT INTO user_social_logins (user_id, provider, provider_user_id, provider_email)
        VALUES ($1, 'yandex', $2, $3)`,
@@ -239,15 +245,17 @@ export const linkYandexAccount = async (req: AuthRequest, res: Response) => {
   }
 
   // Exchange code for access token
-  const tokenResponse = await axios.post('https://oauth.yandex.ru/token', null, {
-    params: {
+  const tokenResponse = await axios.post(
+    'https://oauth.yandex.ru/token',
+    new URLSearchParams({
       grant_type: 'authorization_code',
       code,
       client_id: YANDEX_CLIENT_ID,
       client_secret: YANDEX_CLIENT_SECRET,
       redirect_uri: YANDEX_REDIRECT_URI,
-    },
-  });
+    }),
+    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+  );
 
   const accessToken = tokenResponse.data.access_token;
 

@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHeart, faCalendarDays, faTriangleExclamation, faCircleCheck, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faHeart, faCalendarDays, faTriangleExclamation, faCircleCheck, faSpinner, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 interface Certificate {
   id: string;
@@ -51,17 +51,23 @@ const HealthCertificate: React.FC = () => {
     e.preventDefault();
     if (!user || !issuedDate || !expiryDate) return;
 
-    setSaving(true);
-
-    const documentUrl = certificate?.document_url || null;
     const today = new Date().toISOString().split('T')[0];
-    const status = expiryDate < today ? 'expired' : 'active';
+    if (expiryDate < today) {
+      toast({ title: 'Ошибка', description: 'Нельзя добавить истекшую справку', variant: 'destructive' });
+      return;
+    }
+    const diffDays = (new Date(expiryDate).getTime() - new Date(issuedDate).getTime()) / (1000 * 60 * 60 * 24);
+    if (diffDays > 184) {
+      toast({ title: 'Ошибка', description: 'Срок действия справки не может превышать 6 месяцев. Проверьте указанные даты.', variant: 'destructive' });
+      return;
+    }
 
+    setSaving(true);
     const payload = {
       issued_date: issuedDate,
       expiry_date: expiryDate,
-      status: status,
-      document_url: documentUrl,
+      status: 'active' as const,
+      document_url: certificate?.document_url || null,
     };
 
     try {
@@ -73,15 +79,24 @@ const HealthCertificate: React.FC = () => {
         toast({ title: 'Справка добавлена!' });
       }
       await fetchCertificate();
-    } catch (error) {
-      toast({
-        title: 'Ошибка',
-        description: certificate ? 'Не удалось обновить справку' : 'Не удалось сохранить справку',
-        variant: 'destructive'
-      });
+    } catch (error: any) {
+      const msg = error?.response?.data?.error || (certificate ? 'Не удалось обновить справку' : 'Не удалось сохранить справку');
+      toast({ title: 'Ошибка', description: msg, variant: 'destructive' });
     }
-
     setSaving(false);
+  };
+
+  const handleDelete = async () => {
+    if (!certificate) return;
+    try {
+      await healthCertificatesAPI.deleteCertificate(certificate.id);
+      setCertificate(null);
+      setIssuedDate('');
+      setExpiryDate('');
+      toast({ title: 'Справка удалена' });
+    } catch {
+      toast({ title: 'Ошибка', description: 'Не удалось удалить справку', variant: 'destructive' });
+    }
   };
 
   const getDaysUntilExpiry = () => {
@@ -134,7 +149,7 @@ const HealthCertificate: React.FC = () => {
                           Действительна до {new Date(certificate.expiry_date).toLocaleDateString('ru-RU')}
                         </p>
                       ) : (
-                        <p className="text-sm text-muted-foreground">Не загружена</p>
+                        <p className="text-sm text-muted-foreground">Укажите срок действия справки</p>
                       )}
                     </div>
                   </div>
@@ -197,6 +212,7 @@ const HealthCertificate: React.FC = () => {
                     </div>
                   </div>
 
+                  <div className="flex gap-2">
                   <Button type="submit" disabled={saving}>
                     {saving ? (
                       <>
@@ -210,6 +226,13 @@ const HealthCertificate: React.FC = () => {
                       </>
                     )}
                   </Button>
+                  {certificate && (
+                    <Button type="button" variant="destructive" onClick={handleDelete}>
+                      <FontAwesomeIcon icon={faTrash} className="mr-2 h-4 w-4" />
+                      Удалить
+                    </Button>
+                  )}
+                  </div>
                 </form>
               </CardContent>
             </Card>

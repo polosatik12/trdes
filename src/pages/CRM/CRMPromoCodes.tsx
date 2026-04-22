@@ -58,11 +58,6 @@ const CRMPromoCodes: React.FC = () => {
   }, []);
 
   const checkAccess = async () => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) {
-      navigate('/crm/login');
-      return;
-    }
     try {
       const { data: userData } = await authAPI.getCurrentUser();
       const roles = userData.user.roles || [];

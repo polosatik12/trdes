@@ -9,7 +9,7 @@ export interface AuthRequest extends Request {
 
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    const token = req.cookies?.auth_token || req.headers.authorization?.replace('Bearer ', '');
 
     if (!token) {
       throw new AppError('Требуется аутентификация', 401);

@@ -98,30 +98,26 @@ const HeaderNew: React.FC<HeaderNewProps> = ({ hideLogo = false }) => {
         {/* Center zone: Navigation */}
         <div className="hidden md:flex items-center justify-center">
           <div className="tdr-header-grid">
-            <Link to="/reglament" className={`tdr-nav-link tdr-grid-top-2 ${isActive('/reglament') ? 'active' : ''}`}>Регламент</Link>
-            <Link to="/partners" className={`tdr-nav-link tdr-grid-top-4 ${isActive('/partners') ? 'active' : ''}`}>Партнеры</Link>
-            <Link to="/media" className={`tdr-nav-link tdr-grid-top-6 flex items-center gap-1 ${isActive('/media') ? 'active' : ''}`}>
-              Медиа
-            </Link>
-            <Link to="/contact" className={`tdr-nav-link tdr-grid-top-8 ${isActive('/contact') ? 'active' : ''}`}>Контакты</Link>
-
-            {isHomePage ?
-            <a
-              href="#about-section"
-              className={`tdr-nav-link tdr-grid-bot-1 font-mono ${isAboutVisible ? 'active' : ''}`}
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('about-section')?.scrollIntoView({ behavior: 'smooth' });
-              }}>
+            <div className="tdr-header-grid-top">
+              <Link to="/reglament" className={`tdr-nav-link tdr-grid-top-2 ${isActive('/reglament') ? 'active' : ''}`}>Регламент</Link>
+              <Link to="/partners" className={`tdr-nav-link tdr-grid-top-4 ${isActive('/partners') ? 'active' : ''}`}>Партнеры</Link>
+              <Link to="/media" className={`tdr-nav-link tdr-grid-top-6 ${isActive('/media') ? 'active' : ''}`}>Медиа</Link>
+              <Link to="/contact" className={`tdr-nav-link tdr-grid-top-8 ${isActive('/contact') ? 'active' : ''}`}>Контакты</Link>
+            </div>
+            <div className="tdr-header-grid-bot">
+              {isHomePage ?
+              <a href="#about-section" className={`tdr-nav-link tdr-grid-bot-1 font-mono ${isAboutVisible ? 'active' : ''}`}
+                onClick={(e) => { e.preventDefault(); document.getElementById('about-section')?.scrollIntoView({ behavior: 'smooth' }); }}>
                 О проекте
               </a> :
-            <Link to="/#about-section" className={`tdr-nav-link tdr-grid-bot-1 font-mono ${isAboutVisible ? 'active' : ''}`}>О проекте</Link>
-            }
-            <Link to="/calendar" className={`tdr-nav-link tdr-grid-bot-3 font-mono ${isActive('/calendar') ? 'active' : ''}`}>Календарь</Link>
-            <Link to="/news" className={`tdr-nav-link tdr-grid-bot-5 font-mono ${isActive('/news') ? 'active' : ''}`}>Новости</Link>
-            <Link to="/results" className={`tdr-nav-link tdr-grid-bot-7 font-mono ${isActive('/results') ? 'active' : ''}`}>Результаты</Link>
-            <Link to="/corporate" className={`tdr-nav-link tdr-grid-bot-9 font-mono ${isActive('/corporate') ? 'active' : ''}`}>Корпоративное сообщество</Link>
-            <Link to="/chucha-world" className={`tdr-nav-link tdr-grid-bot-11 font-mono ${isActive('/chucha-world') ? 'active' : ''}`}>Мир чучи</Link>
+              <Link to="/#about-section" className={`tdr-nav-link tdr-grid-bot-1 font-mono ${isAboutVisible ? 'active' : ''}`}>О проекте</Link>
+              }
+              <Link to="/calendar" className={`tdr-nav-link tdr-grid-bot-3 font-mono ${isActive('/calendar') ? 'active' : ''}`}>Календарь</Link>
+              <Link to="/news" className={`tdr-nav-link tdr-grid-bot-5 font-mono ${isActive('/news') ? 'active' : ''}`}>Новости</Link>
+              <Link to="/results" className={`tdr-nav-link tdr-grid-bot-7 font-mono ${isActive('/results') ? 'active' : ''}`}>Результаты</Link>
+              <Link to="/corporate" className={`tdr-nav-link tdr-grid-bot-9 font-mono ${isActive('/corporate') ? 'active' : ''}`}>Корпоративное сообщество</Link>
+              <Link to="/chucha-world" className={`tdr-nav-link tdr-grid-bot-11 font-mono ${isActive('/chucha-world') ? 'active' : ''}`}>Мир чучи</Link>
+            </div>
           </div>
         </div>
         
@@ -139,7 +135,15 @@ const HeaderNew: React.FC<HeaderNewProps> = ({ hideLogo = false }) => {
                       </AvatarFallback>
                     </Avatar>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 bg-white z-[1001] shadow-lg border">
+                  <DropdownMenuContent align="end" className="w-56 bg-white z-[1001] shadow-lg border">
+                    <div className="px-3 py-2 border-b">
+                      <p className="text-sm font-semibold text-foreground truncate">
+                        {profile?.last_name || profile?.first_name
+                          ? `${profile.last_name || ''} ${profile.first_name || ''}`.trim()
+                          : user?.email}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">ID: {user?.id?.slice(0, 8)}</p>
+                    </div>
                     <DropdownMenuItem asChild>
                       <Link to="/dashboard" className="flex items-center gap-2 cursor-pointer">
                         <FontAwesomeIcon icon={faUser} className="h-4 w-4" />

@@ -24,7 +24,7 @@ export class RobokassaService {
     if (customParams) {
       const sortedKeys = Object.keys(customParams).sort();
       for (const key of sortedKeys) {
-        signatureBase += `:${customParams[key]}`;
+        signatureBase += `:${key}=${customParams[key]}`;
       }
     }
 
@@ -46,7 +46,7 @@ export class RobokassaService {
     if (customParams) {
       const sortedKeys = Object.keys(customParams).sort();
       for (const key of sortedKeys) {
-        signatureBase += `:${customParams[key]}`;
+        signatureBase += `:${key}=${customParams[key]}`;
       }
     }
 

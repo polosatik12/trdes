@@ -51,15 +51,22 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuToggle }) => {
         </Link>
 
         <div className="flex-1 flex items-center justify-end gap-3">
+          <div className="hidden sm:flex flex-col items-end">
+            <span className="text-sm font-medium text-foreground">
+              {profile?.last_name && profile?.first_name
+                ? `${profile.last_name} ${profile.first_name}`
+                : getDisplayName()}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              ID аккаунта: {user?.id?.slice(0, 8).toUpperCase()}
+            </span>
+          </div>
           <Avatar className="h-8 w-8 border-2 border-primary/20">
             <AvatarImage src={profile?.avatar_url || undefined} />
             <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
               {getInitials()}
             </AvatarFallback>
           </Avatar>
-          <span className="hidden sm:block text-sm font-medium text-foreground">
-            {getDisplayName()}
-          </span>
         </div>
       </div>
     </header>

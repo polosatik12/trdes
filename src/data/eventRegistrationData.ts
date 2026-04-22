@@ -29,8 +29,8 @@ export const suzdalRegistration: EventRegistrationData = {
       routeName: 'Median Tour',
       distance: '60 км',
       requirements: ['Возраст: от 18 лет', 'Медицинская справка', 'Страховка'],
-      price: 6000,
-      priceLabel: '6 000 ₽',
+      price: 10,
+      priceLabel: '10 ₽',
     },
     {
       routeName: 'Grand Tour',

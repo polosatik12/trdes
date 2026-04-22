@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarDays, faTrophy, faFileLines, faHeart, faArrowRight, faUser, faUsers, faBuilding } from '@fortawesome/free-solid-svg-icons';
-import { registrationsAPI, healthCertificatesAPI, profileAPI, corporateAccountsAPI } from '@/lib/api';
+import { registrationsAPI, healthCertificatesAPI, corporateAccountsAPI } from '@/lib/api';
+import api from '@/lib/api';
 
 const Dashboard: React.FC = () => {
   const { profile, user } = useAuth();
@@ -52,12 +53,11 @@ const Dashboard: React.FC = () => {
   });
 
   // Fetch consents status from profile
-  const { data: profileData, isLoading: loadingProfile } = useQuery({
+  const { data: consentsData, isLoading: loadingProfile } = useQuery({
     queryKey: ['user-profile-consents'],
     queryFn: async () => {
-      const { data } = await profileAPI.getProfile();
-      console.log('Fetched profile data:', data);
-      return data;
+      const { data } = await api.get('/profile/consents');
+      return data.consents || [];
     },
     enabled: !!user,
     refetchInterval: 30000,
@@ -86,19 +86,17 @@ const Dashboard: React.FC = () => {
   const totalParticipations = registrations?.length || 0;
 
   const hasValidHealthCert = healthCerts?.some((cert: any) => {
-    if (cert.status !== 'approved') return false;
+    if (cert.status !== 'active' && cert.status !== 'approved') return false;
     const expiryDate = new Date(cert.expiry_date);
     return expiryDate > new Date();
   });
 
   // Extract consents from profile data
-  const consents = profileData?.consents || {};
-  const allConsentsGiven = consents?.consent_personal_data &&
-                           consents?.consent_advertising &&
-                           consents?.photo_consent &&
-                           consents?.disclaimer_waiver;
+  const signedConsents = (consentsData || []).map((c: any) => c.consent_type);
+  const requiredConsents = ['personal_data_consent', 'privacy_policy', 'waiver', 'photo_consent', 'terms_of_service'];
+  const allConsentsGiven = requiredConsents.every(t => signedConsents.includes(t));
 
-  const healthCertStatus = hasValidHealthCert ? 'Загружена' : 'Не загружена';
+  const healthCertStatus = hasValidHealthCert ? 'Загружена' : 'Не указаны даты';
   const documentsStatus = allConsentsGiven ? 'Подписаны' : 'Требуется подпись';
 
   // Show loading state
@@ -177,7 +175,7 @@ const Dashboard: React.FC = () => {
                       <FontAwesomeIcon icon={faTrophy} className="h-5 w-5 text-accent" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Всего участий</p>
+                      <p className="text-sm text-muted-foreground">Всего заездов</p>
                       <p className="font-semibold text-foreground">{totalParticipations}</p>
                     </div>
                   </div>
@@ -247,7 +245,6 @@ const Dashboard: React.FC = () => {
                         <FontAwesomeIcon icon={faUsers} className="h-5 w-5 text-primary" />
                         <div>
                           <p className="font-medium text-foreground">Управление сотрудниками</p>
-                          <p className="text-sm text-muted-foreground">Добавление и редактирование участников</p>
                         </div>
                       </div>
                       <FontAwesomeIcon icon={faArrowRight} className="h-5 w-5 text-muted-foreground" />
@@ -261,7 +258,6 @@ const Dashboard: React.FC = () => {
                         <FontAwesomeIcon icon={faCalendarDays} className="h-5 w-5 text-primary" />
                         <div>
                           <p className="font-medium text-foreground">Зарегистрировать сотрудников</p>
-                          <p className="text-sm text-muted-foreground">Регистрация команды на мероприятие</p>
                         </div>
                       </div>
                       <FontAwesomeIcon icon={faArrowRight} className="h-5 w-5 text-muted-foreground" />
@@ -275,7 +271,6 @@ const Dashboard: React.FC = () => {
                         <FontAwesomeIcon icon={faHeart} className="h-5 w-5 text-green-500" />
                         <div>
                           <p className="font-medium text-foreground">Справки о здоровье</p>
-                          <p className="text-sm text-muted-foreground">Загрузка медицинских справок сотрудников</p>
                         </div>
                       </div>
                       <FontAwesomeIcon icon={faArrowRight} className="h-5 w-5 text-muted-foreground" />
@@ -291,7 +286,6 @@ const Dashboard: React.FC = () => {
                         <FontAwesomeIcon icon={faCalendarDays} className="h-5 w-5 text-primary" />
                         <div>
                           <p className="font-medium text-foreground">Зарегистрироваться на мероприятие</p>
-                          <p className="text-sm text-muted-foreground">Выберите событие из календаря</p>
                         </div>
                       </div>
                       <FontAwesomeIcon icon={faArrowRight} className="h-5 w-5 text-muted-foreground" />
@@ -304,8 +298,7 @@ const Dashboard: React.FC = () => {
                       <div className="flex items-center gap-3">
                         <FontAwesomeIcon icon={faHeart} className="h-5 w-5 text-green-500" />
                         <div>
-                          <p className="font-medium text-foreground">Загрузить справку о здоровье</p>
-                          <p className="text-sm text-muted-foreground">Требуется для участия в гонках</p>
+                          <p className="font-medium text-foreground">Указать даты справки</p>
                         </div>
                       </div>
                       <FontAwesomeIcon icon={faArrowRight} className="h-5 w-5 text-muted-foreground" />
@@ -319,7 +312,6 @@ const Dashboard: React.FC = () => {
                         <FontAwesomeIcon icon={faFileLines} className="h-5 w-5 text-orange-500" />
                         <div>
                           <p className="font-medium text-foreground">Подписать документы</p>
-                          <p className="text-sm text-muted-foreground">Вейвер и согласия</p>
                         </div>
                       </div>
                       <FontAwesomeIcon icon={faArrowRight} className="h-5 w-5 text-muted-foreground" />

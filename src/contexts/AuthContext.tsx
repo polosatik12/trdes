@@ -31,6 +31,7 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<{ error: Error | null; data: { user: User | null } | null }>;
   signOut: () => Promise<void>;
   refreshProfile: (userId?: string) => Promise<void>;
+  loginWithToken: (token: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -58,69 +59,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-
-    if (token) {
-      authAPI.getCurrentUser()
-        .then(({ data }) => {
-          setUser({ id: data.user.id, email: data.user.email });
-          setProfile(data.user);
-        })
-        .catch((error) => {
-          console.error('Error loading user:', error);
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('user');
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    } else {
-      setLoading(false);
-    }
+    authAPI.getCurrentUser()
+      .then(({ data }) => {
+        setUser({ id: data.user.id, email: data.user.email });
+        setProfile(data.user);
+      })
+      .catch(() => {
+        // not authenticated
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
       const { data } = await authAPI.login(email, password);
-
-      localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-
       setUser(data.user);
-
       const profileData = await fetchProfile();
       setProfile(profileData);
-
       return { error: null };
     } catch (error: any) {
-      console.error('Login error:', error);
-      return {
-        error: new Error(error.response?.data?.error || 'Ошибка входа')
-      };
+      return { error: new Error(error.response?.data?.error || 'Ошибка входа') };
     }
   };
 
   const signUp = async (email: string, password: string) => {
     try {
       const { data } = await authAPI.register(email, password);
-
-      localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-
       setUser(data.user);
-
-      // Загружаем профиль после установки пользователя
       const profileData = await fetchProfile();
       setProfile(profileData);
-
       return { error: null, data: { user: data.user } };
     } catch (error: any) {
-      console.error('Registration error:', error);
-      return {
-        error: new Error(error.response?.data?.error || 'Ошибка регистрации'),
-        data: null
-      };
+      return { error: new Error(error.response?.data?.error || 'Ошибка регистрации'), data: null };
     }
+  };
+
+  const loginWithToken = async (token: string) => {
+    // Exchange token from Yandex OAuth redirect for a cookie session
+    await authAPI.refreshToken(token);
+    const { data } = await authAPI.getCurrentUser();
+    setUser({ id: data.user.id, email: data.user.email });
+    const profileData = await fetchProfile();
+    setProfile(profileData);
   };
 
   const signOut = async () => {
@@ -129,8 +111,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user');
       setUser(null);
       setProfile(null);
     }
@@ -147,6 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signUp,
         signOut,
         refreshProfile,
+        loginWithToken,
       }}
     >
       {children}
